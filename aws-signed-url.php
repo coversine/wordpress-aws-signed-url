@@ -31,7 +31,8 @@ class AWSSignedURL
 	require_once(plugin_dir_path(__FILE__) . '/aws-signed-url-options.php');
     new AWSSignedURL_Options();
 
-	add_filter('wp_get_attachment_url', array($this,'get_signed_URL'),100,2);
+	//uncomment this if you need all attachment urls to be signed with default expirey time (not recommended)
+	//add_filter('wp_get_attachment_url', array($this,'get_signed_URL'),100,2);
   }
 
   function get_signed_URL_from_shortcode($atts = array(), $content = null) 
