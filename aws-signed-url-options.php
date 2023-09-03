@@ -1,4 +1,4 @@
-<?hh
+<?php
 
 class AWSSignedURL_Options
 {
@@ -16,20 +16,20 @@ class AWSSignedURL_Options
 
   function aws_signed_url_settings_init() : void {
 
-    register_setting('pluginPage', 'aws_signed_url_settings', array($this, 'validate_input'));
+    register_setting('aws_signed_url_pluginPage', 'aws_signed_url_settings', array($this, 'validate_input'));
 
     add_settings_section(
       'aws_signed_url_pluginPage_section',
       __('CloudFront Key Pair Details', 'wordpress'),
       array($this,'aws_signed_url_settings_section_callback'),
-      'pluginPage'
+      'aws_signed_url_pluginPage'
     );
 
     add_settings_field(
       'aws_signed_url_key_pair_id',
       __('CloudFront Key Pair ID', 'wordpress'),
       array($this, 'aws_signed_url_key_pair_id_render'),
-      'pluginPage',
+      'aws_signed_url_pluginPage',
       'aws_signed_url_pluginPage_section'
     );
 
@@ -37,7 +37,7 @@ class AWSSignedURL_Options
       'aws_signed_url_pem',
       __('Private Key PEM', 'wordpress'),
       array($this, 'aws_signed_url_pem_render'),
-      'pluginPage',
+      'aws_signed_url_pluginPage',
       'aws_signed_url_pluginPage_section'
     );
 
@@ -45,7 +45,7 @@ class AWSSignedURL_Options
       'aws_signed_url_lifetime',
       __('URL Lifetime', 'wordpress'),
       array($this, 'aws_signed_url_lifetime_render'),
-      'pluginPage',
+      'aws_signed_url_pluginPage',
       'aws_signed_url_pluginPage_section'
     );
 
@@ -60,17 +60,17 @@ class AWSSignedURL_Options
 
   function aws_signed_url_pem_render() : void {
     $options = get_option('aws_signed_url_settings');
-    echo "<textarea cols='65' rows='28' style='font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospaced;' name='aws_signed_url_settings[aws_signed_url_pem]'> {$options['aws_signed_url_pem']}</textarea>";
+    echo "<input type='text' size='50' style='font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospaced;' name='aws_signed_url_settings[aws_signed_url_pem]' value='{$options['aws_signed_url_pem']}' />";
   }
 
 
   function aws_signed_url_settings_section_callback() : void {
-    echo __('Set the Key Pair ID and the Private key values for creating AWS Signed URLs');
+    echo __('Set the Key Pair ID and the Private key file path for creating AWS Signed URLs');
   }
 
   function aws_signed_url_lifetime_render() : void {
     $options = get_option('aws_signed_url_settings');
-    if (!array_key_exists('aws_signed_url_lifetime', $options)){
+    if (is_array( $options ) && !array_key_exists('aws_signed_url_lifetime', $options)){
       $options['aws_signed_url_lifetime'] = '5';
     }
     echo "<input type='number' min='1' max='20000' name='aws_signed_url_settings[aws_signed_url_lifetime]' value='{$options['aws_signed_url_lifetime']}'</input> Minutes";
@@ -83,10 +83,10 @@ class AWSSignedURL_Options
     <p>To create CloudFront signed URLs your trusted signer must have its own CloudFront key pair,
      and the key pair must be active. For details see
     <a href=http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html>Serving Private Content through CloudFront</a>
-    </p><p>To help secure your applications, AWS recommends that you change CloudFront key pairs every 90 days or more often.</p>
+    </p><p>For security reasons, place your private key file above the root folder of your website, and specify the file path here.</p>
 START;
-    settings_fields('pluginPage');
-    do_settings_sections('pluginPage');
+    settings_fields('aws_signed_url_pluginPage');
+    do_settings_sections('aws_signed_url_pluginPage');
     submit_button();
 
 
@@ -105,12 +105,16 @@ START;
     if (strlen($input['aws_signed_url_pem']) == 0) {
       add_settings_error('aws_signed_url_pem', '' ,'Private Key must be set', 'error');
     } else {
-      $key = openssl_get_privatekey($input['aws_signed_url_pem']);
-      if (!$key) {
-        add_settings_error('aws_signed_url_pem', '', 'Cannot parse Private Key. OpenSSL error: ' . openssl_error_string(), 'error');
-      }
+	  $fp = fopen($input['aws_signed_url_pem'], "r");
+	  if ($fp) {
+		$priv_key = fread($fp, 2048);
+		fclose($fp);
+		$key = openssl_get_privatekey($priv_key);
+        if (!$key) {
+          add_settings_error('aws_signed_url_pem', '', 'Cannot parse Private Key. OpenSSL error: ' . openssl_error_string(), 'error');
+        }
+	  }
     }
     return $input;
   }
 }
-
