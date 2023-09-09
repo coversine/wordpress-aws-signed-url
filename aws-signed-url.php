@@ -1,12 +1,17 @@
 <?php
 defined( 'ABSPATH' ) OR exit;
 /*
-Plugin Name: AWS Signed URLs
-Description: Generates signed urls for Cloudfront assets
-Version: 1.0.2
-Author: Cyril George
-
-Copyright 2023 Coversine LLC
+ * Plugin Name:       AWS Signed URLs
+ * Plugin URI:        https://github.com/coversine/wordpress-aws-signed-url/
+ * Description:       Generates signed urls for Cloudfront assets
+ * Version:           1.0.2
+ * Requires PHP:      7.2
+ * Author:            Coversine Website Services
+ * Author URI:        https://www.coversine.net/
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Update URI:        https://github.com/coversine/wordpress-aws-signed-url/
+ * Copyright:         2023 Coversine LLC
 */
 
 register_activation_hook(   __FILE__, array( 'AWSSignedURL', 'aws_signed_url_activation' ) );
